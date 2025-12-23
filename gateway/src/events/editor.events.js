@@ -1,40 +1,39 @@
 const apply = require("../ot/apply");
 const transform = require("../ot/transform");
 const roomManager = require("../roomManager");
-const RedisPub = require("../redis/pub");
+const redisPub = require("../redis/pub");
 
-module.exports = {
-  async handleOperation(ws, msg) {
-    const { docId, op } = msg;
+async function handleOperation(ws, msg) {
+  const { docId, op } = msg;
 
-    const room = roomManager.getRoom(docId);
-    if (!room) return;
+  const room = roomManager.getRoom(docId);
+  if (!room) return;
 
-    // Get existing operations in queue (if any)
-    const pendingOps = room.pending || [];
-    
-    // Transform op against pending ops
-    for (const p of pendingOps) {
-      op = transform(p, op);
-    }
+  // 1️⃣ Transform against pending ops
+  const pendingOps = room.pending || [];
+  for (const prevOp of pendingOps) {
+    op = transform(prevOp, op);
+  }
 
-    // Apply operation to document state in memory
-    room.text = apply(room.text, op);
+  // 2️⃣ Apply operation locally
+  room.text = apply(room.text, op);
+  pendingOps.push(op);
+  room.pending = pendingOps;
 
-    // Add to pending ops
-    pendingOps.push(op);
-    room.pending = pendingOps;
+  // 3️⃣ Broadcast to users connected to THIS server
+  roomManager.broadcast(docId, {
+    type: "op",
+    op
+  });
 
-    // Broadcast to other users
-    roomManager.broadcast(docId, {
+  // 4️⃣ 🔴 PUBLISH TO REDIS (THIS IS YOUR CODE)
+  redisPub.publish(
+    `editor:${docId}`,
+    JSON.stringify({
       type: "op",
       op
-    });
+    })
+  );
+}
 
-    // Publish to Redis for horizontal scaling
-    RedisPub.publish(`editor:${docId}`, JSON.stringify({
-        type: "op",
-        op
-    }));
-  }
-};
+module.exports = { handleOperation };

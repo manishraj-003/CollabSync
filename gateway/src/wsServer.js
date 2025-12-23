@@ -1,5 +1,5 @@
 const WebSocket = require("ws");
-const verifyWsAuth = require("./middleware/auth.js");
+const verifyWsAuth = require("./middleware/wsAuth");
 const roomManager = require("./roomManager");
 const handleClientEvent = require("./events");
 
@@ -41,8 +41,12 @@ module.exports = (server) => {
     console.log("User connected:", ws.user.name);
 
     ws.on("message", (data) => {
-      const msg = JSON.parse(data.toString());
-      handleClientEvent(wss, ws, msg);
+      try {
+        const msg = JSON.parse(data.toString());
+        handleClientEvent(wss, ws, msg);
+      } catch (err) {
+        console.error("Invalid WS message", err);
+      }
     });
 
     ws.on("close", () => {
