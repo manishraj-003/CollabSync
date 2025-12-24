@@ -1,3 +1,4 @@
+import React from "react";
 import { useRef } from "react";
 
 export default function EditorCanvas({ ws, docId, text, setText, cursors }) {

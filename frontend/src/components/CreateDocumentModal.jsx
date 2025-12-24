@@ -1,5 +1,6 @@
+import React from "react";
 import { useState } from "react";
-import API from "../api";
+import API from "../websocket/api";
 
 export default function CreateDocumentModal() {
   const [title, setTitle] = useState("");

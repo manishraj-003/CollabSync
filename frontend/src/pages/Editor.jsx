@@ -1,9 +1,10 @@
+import React from "react";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { createWSConnection } from "../websocket/client";
 import EditorSurface from "../components/EditorSurface";
 import ChatPanel from "../components/ChatPanel";
-import API from "../api";
+import API from "../websocket/api";
 
 export default function Editor() {
   const { token, user } = useAuth();

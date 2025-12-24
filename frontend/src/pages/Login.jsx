@@ -1,12 +1,35 @@
+import React, { use, useContext, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import api from "../websocket/api";
+
 export default function Login() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const [error, setError] = useState(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+
+    try {
+      const res = await api.post("/auth/login", { email, password });
+      login(res.data.user, res.data.token);
+      navigate("/dashboard");
+    } catch (err) {
+      setError("Invalid credentials");
+    }
+  };
+
   return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="p-8 border rounded shadow">
-        <h1 className="text-2xl font-bold mb-4">CollabSync Login</h1>
-        <p className="text-gray-600">
-          Login UI coming soon 🚀
-        </p>
-      </div>
-    </div>
+    <form onSubmit={handleSubmit}>
+      <h1>CollabSync Login</h1>
+      <input name="email" placeholder="Email" required />
+      <input name="password" type="password" placeholder="Password" required />
+      <button type="submit">Login</button>
+      {error && <p>{error}</p>}
+    </form>
   );
 }
