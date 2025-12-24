@@ -1,31 +1,24 @@
-/**
- * gateway/src/index.js
- * MAIN ENTRY FILE (Railway must run this)
- */
-
 const express = require("express");
 const http = require("http");
-const cors = require("cors");
+require("dotenv").config();
 
 const app = express();
 
 /* ================================
-   🔴 CRITICAL: CORS (MUST BE FIRST)
+   🔴 FORCE CORS HEADERS (NO DEPENDENCY)
    ================================ */
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://collab-sync-alpha.vercel.app"
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true
-  })
-);
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://collab-sync-alpha.vercel.app");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
 
-// Handle preflight requests
-app.options("*", cors());
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
 
 /* ================================
    Middleware
@@ -39,28 +32,22 @@ app.use("/auth", require("./routes/auth.routes"));
 app.use("/document", require("./routes/document.routes"));
 
 /* ================================
-   Health check (VERY IMPORTANT)
+   Health check
    ================================ */
 app.get("/", (req, res) => {
   res.json({ status: "CollabSync Gateway Running" });
 });
 
 /* ================================
-   Create HTTP Server
+   HTTP + WebSocket Server
    ================================ */
 const server = http.createServer(app);
+require("./wsServer")(server);
 
 /* ================================
-   Attach WebSocket Server
-   ================================ */
-const initWsServer = require("./wsServer");
-initWsServer(server);
-
-/* ================================
-   Start Server (Railway compatible)
+   Start Server
    ================================ */
 const PORT = process.env.PORT || 8000;
-
 server.listen(PORT, () => {
   console.log("🚀 CollabSync Gateway running on port", PORT);
 });
