@@ -1,9 +1,9 @@
 const express = require("express");
 const http = require("http");
 
+const cors = require("cors");
 const authRoutes = require("./routes/auth.routes");
 const documentRoutes = require("./routes/document.routes");
-
 const app = express();
 const server = http.createServer(app);
 
@@ -12,6 +12,17 @@ require("./wsServer")(server);
 
 // Middleware
 app.use(express.json());
+
+// CORS configuration
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://collab-sync-alpha.vercel.app"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+}));
 
 // Routes
 app.use("/auth", authRoutes);
