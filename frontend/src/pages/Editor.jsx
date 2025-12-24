@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { createWSConnection } from "../websocket/client";
-import EditorCanvas from "../components/EditorSurface";
+import EditorSurface from "../components/EditorSurface";
 import ChatPanel from "../components/ChatPanel";
 import API from "../api";
 
