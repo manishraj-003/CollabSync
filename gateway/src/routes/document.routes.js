@@ -1,102 +1,37 @@
+const express = require("express");
+const router = express.Router();
+
+const docController = require("../controllers/document.controller");
 const Document = require("../models/document.model");
+const auth = require("../middleware/auth");
 
 /**
- * CREATE DOCUMENT
+ * CRUD & Management
  */
-exports.create = async (req, res) => {
+router.post("/create", auth, docController.create);
+router.get("/list", auth, docController.list);
+
+// Specific route FIRST
+router.get("/:id/content", auth, async (req, res) => {
   try {
-    const { title } = req.body;
-
-    if (!title) {
-      return res.status(400).json({ error: "Title is required" });
-    }
-
-    const userId = req.user.id; // from JWT
-
-    const doc = await Document.create(userId, title);
-
-    return res.status(201).json(doc);
-  } catch (err) {
-    console.error("Create document error:", err);
-    return res.status(500).json({ error: "Failed to create document" });
-  }
-};
-
-/**
- * LIST USER DOCUMENTS
- */
-exports.list = async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const docs = await Document.getUserDocs(userId);
-
-    return res.json(docs);
-  } catch (err) {
-    console.error("List documents error:", err);
-    return res.status(500).json({ error: "Failed to list documents" });
-  }
-};
-
-/**
- * LOAD SINGLE DOCUMENT
- */
-exports.load = async (req, res) => {
-  try {
-    const doc = await Document.getDocument(req.params.id);
+    const doc = await Document.findById(req.params.id).select("content");
 
     if (!doc) {
       return res.status(404).json({ error: "Document not found" });
     }
 
-    return res.json(doc);
+    res.json({ content: doc.content });
   } catch (err) {
-    console.error("Load document error:", err);
-    return res.status(500).json({ error: "Failed to load document" });
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch document" });
   }
-};
+});
 
-/**
- * RENAME DOCUMENT
- */
-exports.rename = async (req, res) => {
-  try {
-    const { id, title } = req.body;
+// Generic route LAST
+router.get("/:id", auth, docController.load);
 
-    await Document.rename(id, title);
+router.post("/rename", auth, docController.rename);
+router.post("/delete", auth, docController.delete);
+router.post("/share", auth, docController.share);
 
-    return res.json({ success: true });
-  } catch (err) {
-    console.error("Rename document error:", err);
-    return res.status(500).json({ error: "Failed to rename document" });
-  }
-};
-
-/**
- * DELETE DOCUMENT
- */
-exports.delete = async (req, res) => {
-  try {
-    const { id } = req.body;
-
-    await Document.delete(id);
-
-    return res.json({ success: true });
-  } catch (err) {
-    console.error("Delete document error:", err);
-    return res.status(500).json({ error: "Failed to delete document" });
-  }
-};
-
-/**
- * SHARE DOCUMENT
- */
-exports.share = async (req, res) => {
-  try {
-    // your existing share logic
-    return res.json({ success: true });
-  } catch (err) {
-    console.error("Share document error:", err);
-    return res.status(500).json({ error: "Failed to share document" });
-  }
-};
+module.exports = router;
