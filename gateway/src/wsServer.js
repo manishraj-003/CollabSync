@@ -1,5 +1,5 @@
 const WebSocket = require("ws");
-const verifyWsAuth = require("./middleware/auth.js");
+const verifyWsAuth = require("./middleware/wsAuth");
 const roomManager = require("./roomManager");
 const handleClientEvent = require("./events");
 
