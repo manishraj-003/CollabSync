@@ -2,12 +2,12 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 
-import Login from "./pages/Login";
+import  Login  from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Editor from "./pages/Editor";
 
 import { Routes, Route } from "react-router-dom";
-
+import { AuthProvider } from "./context/AuthContext";
 function App() {
   return (
     <BrowserRouter>
@@ -22,6 +22,8 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <App />
+    <AuthProvider>
+      <App />
+    </AuthProvider> 
   </React.StrictMode>
 );

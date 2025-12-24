@@ -1,5 +1,5 @@
 import { useState } from "react";
-import API from "../api/gateway";
+import API from "../api";
 
 export default function CreateDocumentModal() {
   const [title, setTitle] = useState("");

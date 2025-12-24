@@ -1,12 +1,12 @@
-import { useContext, useEffect, useState, useRef } from "react";
-import { AuthContext } from "../context/AuthContext";
+import { useEffect, useState, useRef } from "react";
+import { useAuth } from "../context/AuthContext";
 import { createWSConnection } from "../websocket/client";
 import EditorCanvas from "../components/EditorCanvas";
 import ChatPanel from "../components/ChatPanel";
 import API from "../api"; // axios instance
 
 export default function Editor() {
-  const { token, user } = useContext(AuthContext);
+  const { token, user } = useAuth();
 
   const [ws, setWS] = useState(null);
   const [docText, setDocText] = useState("");
@@ -79,13 +79,12 @@ export default function Editor() {
           }));
           break;
 
-        // 🔵 Editor text (OT simplified)
         case "op":
-          setDocText((prev) =>
-            typeof applyOperation === "function"
-              ? applyOperation(prev, msg.op)
-              : prev
-          );
+            // Backend already applied OT and sent final text
+          if (typeof msg.content === "string") {
+            // Full text replacement
+            setDocText(msg.content);
+          }
           break;
 
         default:

@@ -1,14 +1,15 @@
-import { useEffect, useState, useContext } from "react";
-import API from "../api/gateway";
-import { AuthContext } from "../context/AuthContext";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import API from "../api";
+import { useAuth } from "../context/AuthContext";
+import CreateDocumentModal from "../components/CreateDocumentModal";
 
 export default function Dashboard() {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const [docs, setDocs] = useState([]);
 
   useEffect(() => {
-    API.get("/document/list").then(res => setDocs(res.data));
+    API.get("/document/list").then((res) => setDocs(res.data));
   }, []);
 
   return (
@@ -24,7 +25,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-3 gap-4 mt-6">
-        {docs.map(doc => (
+        {docs.map((doc) => (
           <Link
             key={doc.id}
             to={`/editor/${doc.id}`}
