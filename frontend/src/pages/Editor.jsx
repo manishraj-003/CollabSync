@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { createWSConnection } from "../websocket/client";
 import EditorCanvas from "../components/EditorCanvas";
 import ChatPanel from "../components/ChatPanel";
-import API from "../api"; // axios instance
+import API from "../api";
 
 export default function Editor() {
   const { token, user } = useAuth();
@@ -14,7 +14,6 @@ export default function Editor() {
   const [users, setUsers] = useState({});
 
   const wsRef = useRef(null);
-
   const docId = window.location.pathname.split("/").pop();
 
   /* ===============================
@@ -37,29 +36,28 @@ export default function Editor() {
     setWS(socket);
 
     socket.onopen = () => {
-      // ✅ JOIN DOCUMENT
-      socket.send(
-        JSON.stringify({
-          type: "join",
-          docId
-        })
-      );
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(
+          JSON.stringify({
+            type: "join",
+            docId
+          })
+        );
 
-      // ✅ PRESENCE: online
-      socket.send(
-        JSON.stringify({
-          type: "presence",
-          docId,
-          status: "online"
-        })
-      );
+        socket.send(
+          JSON.stringify({
+            type: "presence",
+            docId,
+            status: "online"
+          })
+        );
+      }
     };
 
     socket.onmessage = (e) => {
       const msg = JSON.parse(e.data);
 
       switch (msg.type) {
-        // 🟢 Presence
         case "presence":
           setUsers((prev) => ({
             ...prev,
@@ -70,9 +68,8 @@ export default function Editor() {
           }));
           break;
 
-        // 🟡 Cursor
         case "cursor":
-          if (msg.userId === user?.id) return; // avoid echo
+          if (msg.userId === user?.id) return;
           setCursors((prev) => ({
             ...prev,
             [msg.userId]: msg.position
@@ -80,9 +77,7 @@ export default function Editor() {
           break;
 
         case "op":
-            // Backend already applied OT and sent final text
           if (typeof msg.content === "string") {
-            // Full text replacement
             setDocText(msg.content);
           }
           break;
@@ -97,15 +92,16 @@ export default function Editor() {
     };
 
     return () => {
-      // ✅ PRESENCE: offline
       try {
-        socket.send(
-          JSON.stringify({
-            type: "presence",
-            docId,
-            status: "offline"
-          })
-        );
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(
+            JSON.stringify({
+              type: "presence",
+              docId,
+              status: "offline"
+            })
+          );
+        }
       } catch (_) {}
 
       socket.close();
@@ -117,25 +113,24 @@ export default function Editor() {
      =============================== */
   return (
     <div className="flex h-screen relative">
-      {/* ONLINE USERS COUNT */}
       <div className="absolute top-4 right-4 bg-green-200 px-3 py-1 rounded-full z-10">
         Online:{" "}
-        {
-          Object.values(users).filter(
-            (u) => u.status === "online"
-          ).length
-        }
+        {Object.values(users).filter((u) => u.status === "online").length}
       </div>
 
-      <EditorCanvas
-        ws={ws}
-        docId={docId}
-        text={docText}
-        setText={setDocText}
-        cursors={cursors}
-      />
+      {ws && (
+        <>
+          <EditorCanvas
+            ws={ws}
+            docId={docId}
+            text={docText}
+            setText={setDocText}
+            cursors={cursors}
+          />
 
-      <ChatPanel ws={ws} docId={docId} />
+          <ChatPanel ws={ws} docId={docId} />
+        </>
+      )}
     </div>
   );
 }
