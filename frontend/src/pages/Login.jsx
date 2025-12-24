@@ -33,3 +33,12 @@ export default function Login() {
     </form>
   );
 }
+<p className="text-center mt-4">
+        Don't have an account?{" "}
+        <span
+            className="text-blue-600 hover:underline cursor-pointer"
+            onClick={() => navigate("/signup")}
+        >
+            Sign Up
+        </span>
+        </p>
