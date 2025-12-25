@@ -81,7 +81,6 @@ function sendChat(ws, msg) {
 }
 
 
-}
 
 function updatePresence(ws, msg) {
   const { docId, status } = msg;
