@@ -1,4 +1,4 @@
-# CollabSync 🚀  
+# CollabSync 
 ### Real-Time Collaborative Editor
 
 CollabSync is a real-time collaborative document editor inspired by tools like Google Docs.  
