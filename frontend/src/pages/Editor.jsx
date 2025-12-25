@@ -1,5 +1,4 @@
-import React from "react";
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { createWSConnection } from "../websocket/client";
 import EditorSurface from "../components/EditorSurface";
@@ -13,6 +12,7 @@ export default function Editor() {
   const [docText, setDocText] = useState("");
   const [cursors, setCursors] = useState({});
   const [users, setUsers] = useState({});
+  const [showChat, setShowChat] = useState(true);
 
   const wsRef = useRef(null);
   const docId = window.location.pathname.split("/").pop();
@@ -109,29 +109,68 @@ export default function Editor() {
     };
   }, [token, docId, user?.id]);
 
+  const onlineCount = Object.values(users).filter(
+    (u) => u.status === "online"
+  ).length;
+
   /* ===============================
      RENDER
      =============================== */
   return (
-    <div className="flex h-screen relative">
-      <div className="absolute top-4 right-4 bg-green-200 px-3 py-1 rounded-full z-10">
-        Online:{" "}
-        {Object.values(users).filter((u) => u.status === "online").length}
+    <div className="h-screen flex flex-col bg-gray-100">
+      {/* ================= HEADER ================= */}
+      <header className="h-14 bg-white border-b flex items-center justify-between px-4">
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-lg">CollabSync</span>
+          <span className="text-sm text-gray-500 truncate">
+            Document · {docId}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-gray-600">
+            🟢 {onlineCount} online
+          </div>
+
+          <span className="text-sm font-medium text-gray-700">
+            {user?.name}
+          </span>
+
+          <button
+            onClick={() => setShowChat((p) => !p)}
+            className="px-3 py-1 text-sm border rounded-md hover:bg-gray-100"
+          >
+            {showChat ? "Hide Chat" : "Show Chat"}
+          </button>
+
+          <button className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">
+            Share
+          </button>
+        </div>
+      </header>
+
+      {/* ================= MAIN ================= */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* EDITOR */}
+        <main className="flex-1 bg-white relative">
+          {ws && (
+            <EditorSurface
+              ws={ws}
+              docId={docId}
+              text={docText}
+              setText={setDocText}
+              cursors={cursors}
+            />
+          )}
+        </main>
+
+        {/* CHAT */}
+        {showChat && ws && (
+          <aside className="w-80 border-l bg-gray-50">
+            <ChatPanel ws={ws} docId={docId} />
+          </aside>
+        )}
       </div>
-
-      {ws && (
-        <>
-          <EditorSurface
-            ws={ws}
-            docId={docId}
-            text={docText}
-            setText={setDocText}
-            cursors={cursors}
-          />
-
-          <ChatPanel ws={ws} docId={docId} />
-        </>
-      )}
     </div>
   );
 }
