@@ -5,6 +5,38 @@ import EditorSurface from "../components/EditorSurface";
 import ChatPanel from "../components/ChatPanel";
 import API from "../websocket/api";
 
+/* ===============================
+   HELPERS
+   =============================== */
+
+// Consistent color per user
+function getUserColor(userId) {
+  const colors = [
+    "bg-blue-500",
+    "bg-green-500",
+    "bg-purple-500",
+    "bg-pink-500",
+    "bg-orange-500",
+    "bg-teal-500",
+    "bg-indigo-500",
+  ];
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
+    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+}
+
+// Get initials from name
+function getInitials(name = "") {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 export default function Editor() {
   const { token, user } = useAuth();
 
@@ -41,7 +73,7 @@ export default function Editor() {
         socket.send(
           JSON.stringify({
             type: "join",
-            docId
+            docId,
           })
         );
 
@@ -49,7 +81,7 @@ export default function Editor() {
           JSON.stringify({
             type: "presence",
             docId,
-            status: "online"
+            status: "online",
           })
         );
       }
@@ -64,8 +96,8 @@ export default function Editor() {
             ...prev,
             [msg.userId]: {
               name: msg.name,
-              status: msg.status
-            }
+              status: msg.status,
+            },
           }));
           break;
 
@@ -73,7 +105,7 @@ export default function Editor() {
           if (msg.userId === user?.id) return;
           setCursors((prev) => ({
             ...prev,
-            [msg.userId]: msg.position
+            [msg.userId]: msg.position,
           }));
           break;
 
@@ -99,7 +131,7 @@ export default function Editor() {
             JSON.stringify({
               type: "presence",
               docId,
-              status: "offline"
+              status: "offline",
             })
           );
         }
@@ -109,9 +141,9 @@ export default function Editor() {
     };
   }, [token, docId, user?.id]);
 
-  const onlineCount = Object.values(users).filter(
-    (u) => u.status === "online"
-  ).length;
+  const onlineUsers = Object.entries(users).filter(
+    ([, u]) => u.status === "online"
+  );
 
   /* ===============================
      RENDER
@@ -120,6 +152,7 @@ export default function Editor() {
     <div className="h-screen flex flex-col bg-gray-100">
       {/* ================= HEADER ================= */}
       <header className="h-14 bg-white border-b flex items-center justify-between px-4">
+        {/* Left */}
         <div className="flex items-center gap-3">
           <span className="font-semibold text-lg">CollabSync</span>
           <span className="text-sm text-gray-500 truncate">
@@ -127,10 +160,36 @@ export default function Editor() {
           </span>
         </div>
 
+        {/* Right */}
         <div className="flex items-center gap-4">
-          <div className="text-sm text-gray-600">
-            🟢 {onlineCount} online
+          {/* Presence Avatars */}
+          <div className="flex -space-x-2">
+            {onlineUsers.slice(0, 5).map(([userId, u]) => (
+              <div
+                key={userId}
+                title={u.name}
+                className={`
+                  ${getUserColor(userId)}
+                  w-8 h-8 rounded-full
+                  flex items-center justify-center
+                  text-white text-xs font-semibold
+                  ring-2 ring-white
+                `}
+              >
+                {getInitials(u.name)}
+              </div>
+            ))}
+
+            {onlineUsers.length > 5 && (
+              <div className="w-8 h-8 rounded-full bg-gray-300 text-xs flex items-center justify-center ring-2 ring-white">
+                +{onlineUsers.length - 5}
+              </div>
+            )}
           </div>
+
+          <span className="text-sm text-gray-600">
+            🟢 {onlineUsers.length}
+          </span>
 
           <span className="text-sm font-medium text-gray-700">
             {user?.name}
@@ -174,3 +233,4 @@ export default function Editor() {
     </div>
   );
 }
+
