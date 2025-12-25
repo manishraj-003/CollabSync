@@ -18,8 +18,8 @@ module.exports = function (_pattern, channel, message) {
 module.exports = function handleRedisEvent(pattern, channel, message) {
   const data = JSON.parse(message);
 
-  // 🔥 IGNORE self-published messages
-  if (data.origin === undefined) return;
+  // 🔥 Ignore messages from same gateway
+  if (data.gatewayId === process.env.GATEWAY_ID) return;
 
   const docId = channel.split(":")[1];
 

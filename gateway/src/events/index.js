@@ -85,13 +85,17 @@ function sendChat(ws, msg) {
   const { docId, text } = msg;
   if (!docId || !text) return;
 
-  // 🔥 SINGLE SOURCE OF TRUTH
-  roomManager.broadcast(docId, {
-    type: "chat",
-    text,
-    name: ws.user.name
-  });
+  RedisPub.publish(
+    `chat:${docId}`,
+    JSON.stringify({
+      type: "chat",
+      text,
+      name: ws.user.name,
+      gatewayId: process.env.GATEWAY_ID
+    })
+  );
 }
+
 
 /* ======================
    PRESENCE (REDIS OK)

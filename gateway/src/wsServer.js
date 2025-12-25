@@ -1,3 +1,4 @@
+const GATEWAY_ID = process.env.GATEWAY_ID || "gateway-1";
 const WebSocket = require("ws");
 const verifyWsAuth = require("./middleware/wsAuth");
 const roomManager = require("./roomManager");
@@ -7,11 +8,10 @@ const handleClientEvent = require("./events");
 const RedisSub = require("./redis/sub");
 const handleRedisEvent = require("./redis/handleRedisEvent");
 
-// ❌ DO NOT SUBSCRIBE TO chat
 RedisSub.psubscribe("editor:*");
 RedisSub.psubscribe("cursor:*");
 RedisSub.psubscribe("presence:*");
-// RedisSub.psubscribe("chat:*"); ❌ REMOVE
+RedisSub.psubscribe("chat:*"); 
 
 RedisSub.on("pmessage", handleRedisEvent);
 
