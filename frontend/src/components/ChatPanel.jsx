@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-export default function ChatPanel({ ws, docId, user }) {
+export default function ChatPanel({ ws, docId }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
@@ -11,11 +11,7 @@ export default function ChatPanel({ ws, docId, user }) {
       const msg = JSON.parse(e.data);
 
       if (msg.type === "chat") {
-        setMessages((prev) => {
-          // 🔥 de-duplicate using message id
-          if (prev.some((m) => m.id === msg.id)) return prev;
-          return [...prev, msg];
-        });
+        setMessages((prev) => [...prev, msg]);
       }
     };
 
@@ -29,32 +25,11 @@ export default function ChatPanel({ ws, docId, user }) {
   function sendChat() {
     if (!input.trim()) return;
 
-    const id = crypto.randomUUID();
-
-    // 🔥 optimistic UI update
-    setMessages((prev) => [
-      ...prev,
-      {
-        id,
-        text: input,
-        mine: true,
-        user: {
-          id: user.id,
-          name: user.name
-        }
-      }
-    ]);
-
     ws.send(
       JSON.stringify({
         type: "chat",
         docId,
-        id,
-        text: input,
-        user: {
-          id: user.id,
-          name: user.name
-        }
+        text: input
       })
     );
 
@@ -66,19 +41,9 @@ export default function ChatPanel({ ws, docId, user }) {
       <h2 className="text-lg font-semibold mb-3">Chat</h2>
 
       <div className="flex-1 overflow-y-auto space-y-2">
-        {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`p-2 rounded shadow max-w-[90%] ${
-              m.mine
-                ? "bg-blue-100 self-end text-right"
-                : "bg-white self-start"
-            }`}
-          >
-            <div className="text-xs font-semibold text-gray-600 mb-1">
-              {m.mine ? "You" : m.user?.name || "User"}
-            </div>
-            <div>{m.text}</div>
+        {messages.map((m, i) => (
+          <div key={i} className="p-2 rounded shadow bg-white">
+            {m.text}
           </div>
         ))}
       </div>

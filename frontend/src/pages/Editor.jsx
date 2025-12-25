@@ -129,7 +129,7 @@ export default function Editor() {
             cursors={cursors}
           />
 
-          <ChatPanel ws={ws} docId={docId} user={user} />
+          <ChatPanel ws={ws} docId={docId} />
         </>
       )}
     </div>
