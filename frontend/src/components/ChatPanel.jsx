@@ -12,6 +12,7 @@ export default function ChatPanel({ ws, docId, user }) {
 
       if (msg.type === "chat") {
         setMessages((prev) => {
+          // 🔥 de-duplicate using message id
           if (prev.some((m) => m.id === msg.id)) return prev;
           return [...prev, msg];
         });
@@ -19,15 +20,18 @@ export default function ChatPanel({ ws, docId, user }) {
     };
 
     ws.addEventListener("message", handleMessage);
-    return () => ws.removeEventListener("message", handleMessage);
+
+    return () => {
+      ws.removeEventListener("message", handleMessage);
+    };
   }, [ws]);
 
   function sendChat() {
-    // ✅ SAFE GUARD
-    if (!input.trim() || !user) return;
+    if (!input.trim()) return;
 
     const id = crypto.randomUUID();
 
+    // 🔥 optimistic UI update
     setMessages((prev) => [
       ...prev,
       {
@@ -61,52 +65,38 @@ export default function ChatPanel({ ws, docId, user }) {
     <div className="w-80 border-l p-4 bg-gray-50 flex flex-col">
       <h2 className="text-lg font-semibold mb-3">Chat</h2>
 
-      {/* 🔥 AUTH LOADING STATE */}
-      {!user && (
-        <div className="flex-1 flex items-center justify-center text-gray-500">
-          Loading chat...
-        </div>
-      )}
-
-      {/* 🔥 CHAT UI (only when user exists) */}
-      {user && (
-        <>
-          <div className="flex-1 overflow-y-auto space-y-2">
-            {messages.map((m) => (
-              <div
-                key={m.id}
-                className={`p-2 rounded shadow max-w-[90%] ${
-                  m.mine
-                    ? "bg-blue-100 self-end text-right"
-                    : "bg-white self-start"
-                }`}
-              >
-                <div className="text-xs font-semibold text-gray-600 mb-1">
-                  {m.mine ? "You" : m.user?.name || "User"}
-                </div>
-                <div>{m.text}</div>
-              </div>
-            ))}
+      <div className="flex-1 overflow-y-auto space-y-2">
+        {messages.map((m) => (
+          <div
+            key={m.id}
+            className={`p-2 rounded shadow max-w-[90%] ${
+              m.mine
+                ? "bg-blue-100 self-end text-right"
+                : "bg-white self-start"
+            }`}
+          >
+            <div className="text-xs font-semibold text-gray-600 mb-1">
+              {m.mine ? "You" : m.user?.name || "User"}
+            </div>
+            <div>{m.text}</div>
           </div>
+        ))}
+      </div>
 
-          <div className="mt-3 flex">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="flex-1 border p-2 rounded"
-              placeholder="Message..."
-              disabled={!user}
-            />
-            <button
-              onClick={sendChat}
-              className="ml-2 bg-blue-600 text-white px-3 py-2 rounded"
-              disabled={!user}
-            >
-              Send
-            </button>
-          </div>
-        </>
-      )}
+      <div className="mt-3 flex">
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          className="flex-1 border p-2 rounded"
+          placeholder="Message..."
+        />
+        <button
+          onClick={sendChat}
+          className="ml-2 bg-blue-600 text-white px-3 py-2 rounded"
+        >
+          Send
+        </button>
+      </div>
     </div>
   );
 }
