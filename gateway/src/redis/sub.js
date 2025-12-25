@@ -4,22 +4,39 @@ const roomManager = require("../roomManager");
 
 const sub = new Redis(process.env.REDIS_URL);
 
-sub.on("message", (channel, message) => {
-  const parts = channel.split(":");
-  const docId = parts[1];
+// Subscribe to patterns
+sub.psubscribe("op:*", "chat:*", "cursor:*", "presence:*");
 
-  const op = JSON.parse(message);
+sub.on("pmessage", (pattern, channel, message) => {
+  const [type, docId] = channel.split(":");
   const room = roomManager.getRoom(docId);
   if (!room) return;
 
-  // Apply op
-  room.text = apply(room.text, op);
+  const data = JSON.parse(message);
 
-  // Broadcast to local clients
-  roomManager.broadcast(docId, {
-    type: "op",
-    op
-  });
+  // 🔹 OT operations
+  if (type === "op") {
+    room.text = apply(room.text, data);
+    roomManager.broadcast(docId, {
+      type: "op",
+      op: data
+    });
+  }
+
+  // 🔹 Chat
+  else if (type === "chat") {
+    roomManager.broadcast(docId, data);
+  }
+
+  // 🔹 Cursor
+  else if (type === "cursor") {
+    roomManager.broadcast(docId, data);
+  }
+
+  // 🔹 Presence
+  else if (type === "presence") {
+    roomManager.broadcast(docId, data);
+  }
 });
 
 module.exports = sub;

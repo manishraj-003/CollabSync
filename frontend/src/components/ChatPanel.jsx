@@ -1,5 +1,4 @@
-import React from "react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function ChatPanel({ ws, docId }) {
   const [messages, setMessages] = useState([]);
@@ -8,21 +7,50 @@ export default function ChatPanel({ ws, docId }) {
   useEffect(() => {
     if (!ws) return;
 
-    ws.addEventListener("message", (e) => {
+    const handleMessage = (e) => {
       const msg = JSON.parse(e.data);
 
       if (msg.type === "chat") {
-        setMessages((prev) => [...prev, msg]);
+        setMessages((prev) => {
+          // 🔥 de-duplicate using message id
+          if (prev.some((m) => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
       }
-    });
+    };
+
+    ws.addEventListener("message", handleMessage);
+
+    // 🔥 cleanup to prevent duplicate listeners
+    return () => {
+      ws.removeEventListener("message", handleMessage);
+    };
   }, [ws]);
 
   function sendChat() {
-    ws.send(JSON.stringify({
-      type: "chat",
-      docId,
-      text: input
-    }));
+    if (!input.trim()) return;
+
+    const id = crypto.randomUUID(); // 🔥 unique message id
+
+    // 🔥 optimistic UI update
+    setMessages((prev) => [
+      ...prev,
+      {
+        id,
+        text: input,
+        mine: true
+      }
+    ]);
+
+    ws.send(
+      JSON.stringify({
+        type: "chat",
+        docId,
+        id,
+        text: input
+      })
+    );
+
     setInput("");
   }
 
@@ -31,9 +59,14 @@ export default function ChatPanel({ ws, docId }) {
       <h2 className="text-lg font-semibold mb-3">Chat</h2>
 
       <div className="flex-1 overflow-y-auto space-y-2">
-        {messages.map((m, i) => (
-          <div key={i} className="bg-white p-2 rounded shadow">
-            <b>{m.name}</b>: {m.text}
+        {messages.map((m) => (
+          <div
+            key={m.id}
+            className={`p-2 rounded shadow ${
+              m.mine ? "bg-blue-100 self-end" : "bg-white"
+            }`}
+          >
+            {m.text}
           </div>
         ))}
       </div>
@@ -45,8 +78,8 @@ export default function ChatPanel({ ws, docId }) {
           className="flex-1 border p-2 rounded"
           placeholder="Message..."
         />
-        <button 
-          onClick={sendChat} 
+        <button
+          onClick={sendChat}
           className="ml-2 bg-blue-600 text-white px-3 py-2 rounded"
         >
           Send

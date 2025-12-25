@@ -64,23 +64,22 @@ function updateCursor(ws, msg) {
 }
 
 function sendChat(ws, msg) {
-  const { docId, text } = msg;
+  const { docId, text, id } = msg;
 
-  roomManager.broadcast(docId, {
-    type: "chat",
-    userId: ws.user.id,
-    name: ws.user.name,
-    text,
-    timestamp: Date.now()
-  });
 
-  RedisPub.publish(`chat:${docId}`, JSON.stringify({
-  type: "chat",
-  userId: ws.user.id,
-  text: msg.text,
-  name: ws.user.name,
-  timestamp: Date.now()
-}));
+  RedisPub.publish(
+    `chat:${docId}`,
+    JSON.stringify({
+      type: "chat",
+      id,                 // 🔥 messageId
+      userId: ws.user.id,
+      name: ws.user.name,
+      text,
+      timestamp: Date.now()
+    })
+  );
+}
+
 
 }
 
