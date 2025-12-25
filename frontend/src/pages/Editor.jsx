@@ -44,17 +44,17 @@ export default function Editor() {
   const [users, setUsers] = useState({});
   const [showChat, setShowChat] = useState(false);
 
-  /* 🔥 FIX: source of truth for dark mode */
+  /* 🔥 FIX: source of truth for dark mode 
   const [dark, setDark] = useState(
     localStorage.getItem("theme") === "dark"
   );
-
+*/
   const wsRef = useRef(null);
   const docId = window.location.pathname.split("/").pop();
 
   /* ===============================
      SYNC DARK MODE → DOM
-     =============================== */
+     =============================== 
   useEffect(() => {
     const root = document.documentElement;
 
@@ -70,7 +70,7 @@ export default function Editor() {
   function toggleDarkMode() {
     setDark((prev) => !prev);
   }
-
+*/
   /* ===============================
      LOAD DOCUMENT
      =============================== */
@@ -174,6 +174,7 @@ export default function Editor() {
           </span>
 
           {/* 🌙 DARK MODE BUTTON */}
+          {/*
           <button
             onClick={toggleDarkMode}
             className="px-2 py-1 rounded-md border text-sm
@@ -183,7 +184,7 @@ export default function Editor() {
           >
             {dark ? "☀️" : "🌙"}
           </button>
-
+*/}
           <button
             onClick={() => setShowChat((p) => !p)}
             className="px-3 py-1 text-sm border rounded-md
