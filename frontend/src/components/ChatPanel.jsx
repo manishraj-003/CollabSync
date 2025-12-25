@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from "react";
 
 export default function ChatPanel({ ws, docId, user }) {
+  // 🔥 GUARD: user may be null on first render
+  if (!user) {
+    return (
+      <div className="w-80 border-l p-4 bg-gray-50 flex items-center justify-center text-gray-500">
+        Loading chat...
+      </div>
+    );
+  }
+
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
@@ -27,7 +36,8 @@ export default function ChatPanel({ ws, docId, user }) {
   }, [ws]);
 
   function sendChat() {
-    if (!input.trim()) return;
+    // 🔥 extra safety guard
+    if (!input.trim() || !user) return;
 
     const id = crypto.randomUUID();
 
