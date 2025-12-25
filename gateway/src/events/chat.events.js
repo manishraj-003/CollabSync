@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-export default function ChatPanel({ ws, docId }) {
+export default function ChatPanel({ ws, docId, user }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
@@ -12,7 +12,6 @@ export default function ChatPanel({ ws, docId }) {
 
       if (msg.type === "chat") {
         setMessages((prev) => {
-          // 🔥 de-duplicate using message id
           if (prev.some((m) => m.id === msg.id)) return prev;
           return [...prev, msg];
         });
@@ -21,7 +20,6 @@ export default function ChatPanel({ ws, docId }) {
 
     ws.addEventListener("message", handleMessage);
 
-    // 🔥 cleanup to prevent duplicate listeners
     return () => {
       ws.removeEventListener("message", handleMessage);
     };
@@ -30,15 +28,18 @@ export default function ChatPanel({ ws, docId }) {
   function sendChat() {
     if (!input.trim()) return;
 
-    const id = crypto.randomUUID(); // 🔥 unique message id
+    const id = crypto.randomUUID();
 
-    // 🔥 optimistic UI update
     setMessages((prev) => [
       ...prev,
       {
         id,
         text: input,
-        mine: true
+        mine: true,
+        user: {
+          id: user.id,
+          name: user.name
+        }
       }
     ]);
 
@@ -47,7 +48,11 @@ export default function ChatPanel({ ws, docId }) {
         type: "chat",
         docId,
         id,
-        text: input
+        text: input,
+        user: {
+          id: user.id,
+          name: user.name
+        }
       })
     );
 
@@ -66,7 +71,12 @@ export default function ChatPanel({ ws, docId }) {
               m.mine ? "bg-blue-100 self-end" : "bg-white"
             }`}
           >
-            {m.text}
+            <div>
+              <span className="font-semibold mr-1">
+                {m.mine ? "You" : m.user?.name || "User"}:
+              </span>
+              {m.text}
+            </div>
           </div>
         ))}
       </div>

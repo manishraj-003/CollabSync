@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-export default function ChatPanel({ ws, docId }) {
+export default function ChatPanel({ ws, docId, user }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
@@ -21,7 +21,6 @@ export default function ChatPanel({ ws, docId }) {
 
     ws.addEventListener("message", handleMessage);
 
-    // 🔥 cleanup to prevent duplicate listeners
     return () => {
       ws.removeEventListener("message", handleMessage);
     };
@@ -30,7 +29,7 @@ export default function ChatPanel({ ws, docId }) {
   function sendChat() {
     if (!input.trim()) return;
 
-    const id = crypto.randomUUID(); // 🔥 unique message id
+    const id = crypto.randomUUID();
 
     // 🔥 optimistic UI update
     setMessages((prev) => [
@@ -38,7 +37,11 @@ export default function ChatPanel({ ws, docId }) {
       {
         id,
         text: input,
-        mine: true
+        mine: true,
+        user: {
+          id: user.id,
+          name: user.name
+        }
       }
     ]);
 
@@ -47,7 +50,11 @@ export default function ChatPanel({ ws, docId }) {
         type: "chat",
         docId,
         id,
-        text: input
+        text: input,
+        user: {
+          id: user.id,
+          name: user.name
+        }
       })
     );
 
@@ -62,11 +69,16 @@ export default function ChatPanel({ ws, docId }) {
         {messages.map((m) => (
           <div
             key={m.id}
-            className={`p-2 rounded shadow ${
-              m.mine ? "bg-blue-100 self-end" : "bg-white"
+            className={`p-2 rounded shadow max-w-[90%] ${
+              m.mine
+                ? "bg-blue-100 self-end text-right"
+                : "bg-white self-start"
             }`}
           >
-            {m.text}
+            <div className="text-xs font-semibold text-gray-600 mb-1">
+              {m.mine ? "You" : m.user?.name || "User"}
+            </div>
+            <div>{m.text}</div>
           </div>
         ))}
       </div>
