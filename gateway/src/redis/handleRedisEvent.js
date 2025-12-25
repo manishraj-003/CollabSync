@@ -14,3 +14,14 @@ module.exports = function (_pattern, channel, message) {
 
   roomManager.broadcast(docId, payload);
 };
+
+module.exports = function handleRedisEvent(pattern, channel, message) {
+  const data = JSON.parse(message);
+
+  // 🔥 IGNORE self-published messages
+  if (data.origin === undefined) return;
+
+  const docId = channel.split(":")[1];
+
+  roomManager.broadcast(docId, data);
+};

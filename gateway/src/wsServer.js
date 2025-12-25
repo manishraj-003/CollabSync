@@ -3,27 +3,18 @@ const verifyWsAuth = require("./middleware/wsAuth");
 const roomManager = require("./roomManager");
 const handleClientEvent = require("./events");
 
-// Redis
+// Redis (KEEP for other events)
 const RedisSub = require("./redis/sub");
 const handleRedisEvent = require("./redis/handleRedisEvent");
 
-/**
- * ============================
- * REDIS SUBSCRIPTIONS (GLOBAL)
- * ============================
- */
+// ❌ DO NOT SUBSCRIBE TO chat
 RedisSub.psubscribe("editor:*");
 RedisSub.psubscribe("cursor:*");
 RedisSub.psubscribe("presence:*");
-RedisSub.psubscribe("chat:*");
+// RedisSub.psubscribe("chat:*"); ❌ REMOVE
 
 RedisSub.on("pmessage", handleRedisEvent);
 
-/**
- * ============================
- * WEBSOCKET SERVER
- * ============================
- */
 module.exports = (server) => {
   const wss = new WebSocket.Server({
     noServer: true,

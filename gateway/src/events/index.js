@@ -7,17 +7,24 @@ module.exports = function handleClientEvent(wss, ws, msg) {
   switch (type) {
     case "join":
       return joinDocument(ws, msg);
+
     case "cursor":
       return updateCursor(ws, msg);
+
     case "chat":
-      return sendChat(ws, msg);
+      return sendChat(ws, msg); // 🔥 FIXED
+
     case "presence":
       return updatePresence(ws, msg);
+
     default:
       console.log("Unknown event", msg);
   }
 };
 
+/* ======================
+   JOIN DOCUMENT
+====================== */
 function joinDocument(ws, msg) {
   const { docId } = msg;
 
@@ -34,13 +41,18 @@ function joinDocument(ws, msg) {
   // Send back existing users
   const room = roomManager.getRoom(docId);
 
-  ws.send(JSON.stringify({
-    type: "init",
-    users: Object.keys(room.presence),
-    cursors: room.cursors
-  }));
+  ws.send(
+    JSON.stringify({
+      type: "init",
+      users: Object.keys(room.presence),
+      cursors: room.cursors
+    })
+  );
 }
 
+/* ======================
+   CURSOR (REDIS OK)
+====================== */
 function updateCursor(ws, msg) {
   const { docId, position } = msg;
 
@@ -54,34 +66,36 @@ function updateCursor(ws, msg) {
     userId: ws.user.id,
     position
   });
-  
-  RedisPub.publish(`cursor:${docId}`, JSON.stringify({
-  type: "cursor",
-  userId: ws.user.id,
-  position: msg.position
-}));
 
-}
-
-function sendChat(ws, msg) {
-  const { docId, text, id } = msg;
-
-
+  // Redis for scaling
   RedisPub.publish(
-    `chat:${docId}`,
+    `cursor:${docId}`,
     JSON.stringify({
-      type: "chat",
-      id,                 // 🔥 messageId
+      type: "cursor",
       userId: ws.user.id,
-      name: ws.user.name,
-      text,
-      timestamp: Date.now()
+      position
     })
   );
 }
 
+/* ======================
+   CHAT (NO REDIS)
+====================== */
+function sendChat(ws, msg) {
+  const { docId, text } = msg;
+  if (!docId || !text) return;
 
+  // 🔥 SINGLE SOURCE OF TRUTH
+  roomManager.broadcast(docId, {
+    type: "chat",
+    text,
+    name: ws.user.name
+  });
+}
 
+/* ======================
+   PRESENCE (REDIS OK)
+====================== */
 function updatePresence(ws, msg) {
   const { docId, status } = msg;
 
@@ -91,12 +105,12 @@ function updatePresence(ws, msg) {
     status
   });
 
-  RedisPub.publish(`presence:${docId}`, JSON.stringify({
-  type: "presence",
-  userId: ws.user.id,
-  status: msg.status
-}));
-
+  RedisPub.publish(
+    `presence:${docId}`,
+    JSON.stringify({
+      type: "presence",
+      userId: ws.user.id,
+      status
+    })
+  );
 }
-
-
