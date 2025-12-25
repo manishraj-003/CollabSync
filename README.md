@@ -183,7 +183,7 @@ CollabSync/
 └── package-lock.json
 ```
 
-🎯 Why this project?
+🎯 **Why this project?**
 
 This project was built to understand:
 
@@ -197,7 +197,7 @@ Full-stack application architecture
 
 It focuses on engineering concepts, not just UI.
 
-📌 Future Improvements
+📌 **Future Improvements**
 
 Operational Transform (OT) for conflict resolution
 
@@ -209,7 +209,7 @@ Dark mode (optional)
 
 Performance optimizations for large documents
 
-👤 Author
+👤 **Author**
 
-Manish
-Aspiring Software Engineer | Full-Stack Developer
+**Manish Raj**
+**Aspiring Software Engineer | Full-Stack Developer**
