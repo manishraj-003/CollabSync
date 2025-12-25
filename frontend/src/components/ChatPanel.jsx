@@ -16,10 +16,7 @@ export default function ChatPanel({ ws, docId }) {
     };
 
     ws.addEventListener("message", handleMessage);
-
-    return () => {
-      ws.removeEventListener("message", handleMessage);
-    };
+    return () => ws.removeEventListener("message", handleMessage);
   }, [ws]);
 
   function sendChat() {
@@ -37,31 +34,23 @@ export default function ChatPanel({ ws, docId }) {
   }
 
   return (
-    <div className="w-80 border-l p-4 bg-gray-50 flex flex-col">
-      <h2 className="text-lg font-semibold mb-3">Chat</h2>
+    <div>
+      <h2>Chat</h2>
 
-      <div className="flex-1 overflow-y-auto space-y-2">
+      <div>
         {messages.map((m, i) => (
-          <div key={i} className="p-2 rounded shadow bg-white">
-            {m.text}
+          <div key={i}>
+            <strong>{m.user?.name || "User"}:</strong> {m.text}
           </div>
         ))}
       </div>
 
-      <div className="mt-3 flex">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          className="flex-1 border p-2 rounded"
-          placeholder="Message..."
-        />
-        <button
-          onClick={sendChat}
-          className="ml-2 bg-blue-600 text-white px-3 py-2 rounded"
-        >
-          Send
-        </button>
-      </div>
+      <input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Message..."
+      />
+      <button onClick={sendChat}>Send</button>
     </div>
   );
 }
