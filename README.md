@@ -212,4 +212,4 @@ Performance optimizations for large documents
 👤 **Author**
 
 **Manish Raj**
-**Aspiring Software Engineer | Full-Stack Developer**
+Aspiring Software Engineer | Full-Stack Developer
